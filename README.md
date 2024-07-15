@@ -7,8 +7,8 @@ This repository contains the Pythonisation of my job search.
 1. **Clone the repository**:
 
     ```
-    git clonehttps://github.com/doctorsamdata/job_search.git
     cd job_search
+    git clone https://github.com/doctorsamdata/job_search.git
     ```
 
 2. **Install dependencies**:
