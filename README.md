@@ -17,7 +17,7 @@ This repository contains the Pythonisation of my job search.
     pip install -r requirements.txt
     ```
 
-## Running the Application
+## Running the application
 To run the application, execute:
 
 ```
