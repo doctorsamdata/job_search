@@ -13,7 +13,7 @@ class ContentScraper:
             response.raise_for_status()
             soup = BeautifulSoup(response.content, 'html.parser')
             self.text = ' '.join(soup.stripped_strings)
-            self.remove_text("Het Rijk hecht waarde aan een diverse en inclusieve organisatie.")
+            self.remove_text("Stel gerust je vraag Meer informatie over deze vacature")
             self.replace_chars()
         except requests.RequestException as e:
             print(f"Error fetching URL: {e}")
@@ -44,9 +44,20 @@ class BuzzCounter:
     def get_buzzword_counts(self):
         return dict(self.buzzword_counts)
     
+class WageExtractor:
+    def extract_wages(self, text):
+        # Regular expression to match various wage formats in euros
+        pattern = re.compile(
+            r'€\s?\d{1,2}\.\d{3},?-?|€\d{1,2}\.\d{3}-|€\d{4}|€\s?\d{1,2}\.\d{3}\s?\–\s?€\d{1,2}\.\d{3}',
+            re.IGNORECASE
+        )
+        return pattern.findall(text)
+    
 # Example usage
-url = "https://www.werkenbijdeoverheid.nl/vacatures/forensisch-data-scientist-uit-het-veiligheidsdomein-NFI-2024-0064?baanplein_id=01487-155551330261&utm_campaign=2024-07-11&utm_source=job-mailing&utm_medium=email"
-buzzwords = ["data", "scientist", "veiligheid", "GitHub", "ai ", "machine learning", "python", "doctoraal"]
+#url = "https://www.werkenbijdeoverheid.nl/vacatures/forensisch-data-scientist-uit-het-veiligheidsdomein-NFI-2024-0064"
+#url = "https://www.werkenbijdeoverheid.nl/vacatures/solution-architect-bedrijfsvoering-AIVD-2024-0093"
+url = "https://www.sogeti.nl/vacatures/ai-data-scientist"
+buzzwords = ["data scien", "veiligheid", "GitHub", " ai ", "machine learning", "python", "agile", "innovatie"]
 
 # Scrape
 scraper = ContentScraper(url)
@@ -60,3 +71,8 @@ buzz_counter = BuzzCounter(buzzwords)
 buzz_counter.count_buzzwords(text)
 buzzword_counts = buzz_counter.get_buzzword_counts()
 print(f"Buzzword Counts: {buzzword_counts}")
+
+# Check wage
+wage_extractor = WageExtractor()
+wages = wage_extractor.extract_wages(text)
+print(f"Extracted Wages: {wages}")

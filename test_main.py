@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, Mock
 import requests
-from main import ContentScraper, BuzzCounter
+from main import ContentScraper, BuzzCounter, WageExtractor
 
 class TestContentScraper(unittest.TestCase):
     
@@ -31,8 +31,8 @@ class TestContentScraper(unittest.TestCase):
             mock_print.assert_called_with("Error fetching URL: Error")
     
     def test_remove_text(self):
-        self.scraper.text = 'This is a test. Het Rijk hecht waarde aan een diverse en inclusieve organisatie.'
-        self.scraper.remove_text("Het Rijk hecht waarde aan een diverse en inclusieve organisatie.")
+        self.scraper.text = 'This is a test. Stel gerust je vraag Meer informatie over deze vacature'
+        self.scraper.remove_text("Stel gerust je vraag Meer informatie over deze vacature")
         self.assertEqual(self.scraper.get_text(), 'This is a test.')
     
     def test_no_text_removal(self):
@@ -78,6 +78,32 @@ class TestBuzzCounter(unittest.TestCase):
         text = 'GitHub uses Git as a version control system.'
         self.counter.count_buzzwords(text)
         self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0, 'git': 2})
+
+class TestWageExtractor(unittest.TestCase):
+
+    def setUp(self):
+        self.wage_extractor = WageExtractor()
+    
+    def test_extract_wages(self):
+        text = ('€ 5.212,- en € 7.747\n'
+                'minimaal €5.008,- en maximaal €6.777,- bruto per maand\n'
+                'tot €7.300,-\n'
+                '€4.691   €6.907 (bruto)\n'
+                '€4.691 €6.907 (bruto)\n'
+                'Min €4.691–Max. €6.907 (bruto)')
+        
+        expected_wages = [
+            '€ 5.212,-', '€ 7.747', '€5.008,-', '€6.777,-',
+            '€7.300,-', '€4.691', '€6.907', '€4.691', '€6.907',
+            '€4.691', '€6.907'
+        ]
+        
+        extracted_wages = self.wage_extractor.extract_wages(text)
+        self.assertEqual(extracted_wages, expected_wages)
+    
+    def test_extract_no_wages(self):
+        text = 'There are no wages mentioned in this text.'
+        self.assertEqual(self.wage_extractor.extract_wages(text), [])
 
 if __name__ == "__main__":
     unittest.main()
