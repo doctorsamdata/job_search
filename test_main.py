@@ -16,12 +16,12 @@ class TestContentScraper(unittest.TestCase):
     @patch('requests.get')
     def test_fetch_and_convert(self, mock_get):
         mock_response = Mock()
-        mock_response.content = b'<html><body>Test content</body></html>'
+        mock_response.content = b'<html><body>Test/content-with-hyphens</body></html>'
         mock_response.raise_for_status = Mock()
         mock_get.return_value = mock_response
         
         self.scraper.fetch_and_convert()
-        self.assertEqual(self.scraper.get_text(), 'Test content')
+        self.assertEqual(self.scraper.get_text(), 'Test content with hyphens')
     
     @patch('requests.get')
     def test_fetch_and_convert_error(self, mock_get):
@@ -40,34 +40,44 @@ class TestContentScraper(unittest.TestCase):
         self.scraper.remove_text("Nonexistent text")
         self.assertEqual(self.scraper.get_text(), 'This is a test.')
 
+    def test_replace_chars(self):
+        self.scraper.text = 'This/is-a/test'
+        self.scraper.replace_chars()
+        self.assertEqual(self.scraper.get_text(), 'This is a test')
+
 class TestBuzzCounter(unittest.TestCase):
 
     def setUp(self):
-        self.buzzwords = ['innovation', 'synergy']
+        self.buzzwords = ['innovation', 'synergy', 'git']
         self.counter = BuzzCounter(self.buzzwords)
     
     def test_initialization(self):
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0})
+        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0, 'git': 0})
     
     def test_count_buzzwords(self):
         text = 'Innovation and synergy are key. Innovation drives success.'
         self.counter.count_buzzwords(text)
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 2, 'synergy': 1})
+        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 2, 'synergy': 1, 'git': 0})
     
     def test_case_insensitivity(self):
         text = 'Innovation INNOVATION'
         self.counter.count_buzzwords(text)
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 2, 'synergy': 0})
+        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 2, 'synergy': 0, 'git': 0})
     
     def test_no_buzzwords(self):
         text = 'There are no matching words here.'
         self.counter.count_buzzwords(text)
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0})
+        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0, 'git': 0})
     
     def test_empty_text(self):
         text = ''
         self.counter.count_buzzwords(text)
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0})
+        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0, 'git': 0})
+
+    def test_partial_buzzwords(self):
+        text = 'GitHub uses Git as a version control system.'
+        self.counter.count_buzzwords(text)
+        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0, 'git': 2})
 
 if __name__ == "__main__":
     unittest.main()
