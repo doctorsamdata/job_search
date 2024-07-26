@@ -3,11 +3,8 @@ title: "Report"
 subtitle: "Match vacature"
 author: "Samare Huls"
 format: 
-    pdf:
-        latex-engine: pdflatex
     html:
         css: styles.css
-jupyter: python3
 ---
 
 ## Test
