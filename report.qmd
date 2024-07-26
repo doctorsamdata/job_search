@@ -1,0 +1,32 @@
+---
+title: "Report"
+subtitle: "Match vacature"
+author: "Samare Huls"
+format: 
+    pdf:
+        latex-engine: pdflatex
+    html:
+        css: styles.css
+jupyter: python3
+---
+
+## Test
+test
+
+<span class="red-text">This is some red text.</span>
+
+```{python}
+#| class-output: output
+
+x = "hello quarto"
+print(x)
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{python}
+#| class-output: output
+
+2 * 2
+```
