@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import patch, Mock
 import requests
-from main import ContentScraper, BuzzCounter, WageExtractor
+import os
+
+from main import ContentScraper, BuzzCounter, WageExtractor, MarkdownReporter
 
 class TestContentScraper(unittest.TestCase):
     
@@ -104,6 +106,59 @@ class TestWageExtractor(unittest.TestCase):
     def test_extract_no_wages(self):
         text = 'There are no wages mentioned in this text.'
         self.assertEqual(self.wage_extractor.extract_wages(text), [])
+
+class TestMarkdownReporter(unittest.TestCase):
+    def setUp(self):
+        self.filename = 'test_report.md'
+        self.reporter = MarkdownReporter(self.filename)
+        self.url = "https://example.com"
+        self.buzzwords = ['innovation', 'synergy', 'git']
+        self.buzzword_counts = {'innovation': 2, 'synergy': 1, 'git': 0}
+        self.wages = ["€5.212", "€7.747"]
+
+    @patch('builtins.open', new_callable=mock_open)
+    def test_write_report(self, mock_open):
+        mock_file = Mock()
+        mock_open.return_value = mock_file
+        self.reporter.write_report(self.url, self.buzzwords, self.buzzword_counts, self.wages)
+
+        # Check if Markdown file is created
+        markdown_content = f"""
+        
+        # Report for URL: {self.url}
+        
+        ## Buzzwords
+        {', '.join(self.buzzwords)}
+
+        ## Buzzword Counts
+        {self.reporter.format_buzzword_counts(self.buzzword_counts)}
+
+        ## Extracted Wages
+        {self.reporter.format_wages(self.wages)}
+        """
+        markdown_content = markdown_content.strip()  # Remove extra newlines at the start and end
+
+        # Verify Markdown file content
+        mock_open.assert_called_once_with(self.filename, 'w')
+        handle = mock_open()
+        handle.write.assert_called_once_with(markdown_content)
+        
+        # Verify HTML file content
+        html_content = md2html(markdown_content)
+        html_filename = self.filename.replace('.md', '.html')
+        with open(html_filename, 'w') as file:
+            file.write(html_content)
+        
+        # Ensure HTML file creation
+        self.assertTrue(os.path.exists(html_filename))
+
+    def tearDown(self):
+        # Cleanup files after test
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+        html_filename = self.filename.replace('.md', '.html')
+        if os.path.exists(html_filename):
+            os.remove(html_filename)
 
 if __name__ == "__main__":
     unittest.main()

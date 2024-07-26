@@ -1,6 +1,7 @@
 import re, requests
 from bs4 import BeautifulSoup
 from collections import Counter
+from markdown2 import markdown as md2html
 
 class ContentScraper:
     def __init__(self, url):
@@ -53,11 +54,47 @@ class WageExtractor:
         )
         return pattern.findall(text)
     
+class MarkdownReporter:
+    def __init__(self, filename):
+        self.filename = filename
+    
+    def write_report(self, url, buzzwords, buzzword_counts, wages):
+        # Create Markdown content
+        markdown_content = f"""
+        
+        # Report for URL: {url}
+        
+        ## Buzzwords
+        {', '.join(buzzwords)}
+
+        ## Buzzword Counts
+        {self.format_buzzword_counts(buzzword_counts)}
+
+        ## Extracted Wages
+        {self.format_wages(wages)}
+        """
+
+        # Save to file
+        with open(self.filename, 'w') as file:
+            file.write(markdown_content)
+        
+        # Convert Markdown to HTML/PDF
+        html_content = md2html(markdown_content)
+        html_filename = self.filename.replace('.md', '.html')
+        with open(html_filename, 'w') as file:
+            file.write(html_content)
+
+    def format_buzzword_counts(self, counts):
+        return '\n'.join([f"{buzzword}: {count}" for buzzword, count in counts.items()])
+    
+    def format_wages(self, wages):
+        return '\n'.join(wages)
+    
 # Example usage
-#url = "https://www.werkenbijdeoverheid.nl/vacatures/forensisch-data-scientist-uit-het-veiligheidsdomein-NFI-2024-0064"
-#url = "https://www.werkenbijdeoverheid.nl/vacatures/solution-architect-bedrijfsvoering-AIVD-2024-0093"
-url = "https://www.sogeti.nl/vacatures/ai-data-scientist"
+url = "https://www.werkenbijdeoverheid.nl/vacatures/forensisch-data-scientist-uit-het-veiligheidsdomein-NFI-2024-0064"
+#url = "https://www.sogeti.nl/vacatures/ai-data-scientist"
 buzzwords = ["data scien", "veiligheid", "GitHub", " ai ", "machine learning", "python", "agile", "innovatie"]
+filename = "report.md"
 
 # Scrape
 scraper = ContentScraper(url)
@@ -76,3 +113,10 @@ print(f"Buzzword Counts: {buzzword_counts}")
 wage_extractor = WageExtractor()
 wages = wage_extractor.extract_wages(text)
 print(f"Extracted Wages: {wages}")
+
+# Generate Markdown report
+markdown_reporter = MarkdownReporter(filename)
+markdown_reporter.write_report(url, buzzwords, buzzword_counts, wages)
+
+
+print(f"Report generated and saved as {filename}")
