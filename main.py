@@ -76,7 +76,7 @@ class WageExtractor:
 url = "https://www.werkenbijdeoverheid.nl/vacatures/forensisch-data-scientist-uit-het-veiligheidsdomein-NFI-2024-0064"
 #url = "https://www.sogeti.nl/vacatures/ai-data-scientist"
 technical_buzzwords = ["python", "machine learning", "GitHub"]
-personal_buzzwords = ["team", "analytic", "universit", "stakeholder"]
+personal_buzzwords = ["team", "analyti", "universit", "stakeholder"]
 working_buzzwords = ["team", "innovat", "agile"]
 
 # Scrape
@@ -84,7 +84,6 @@ scraper = ContentScraper(url)
 scraper.fetch_and_convert()
 text = scraper.get_text()
 print(f"Scraped text: {text[:100]}...")  # Print first 100 characters of the scraped text
-print(f"Scraped text: {text}...")
 
 # Count buzzwords
 buzz_counter = BuzzCounter(technical_buzzwords, personal_buzzwords, working_buzzwords)

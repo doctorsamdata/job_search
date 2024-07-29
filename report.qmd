@@ -6,24 +6,47 @@ format:
     pdf:
         css: styles.css
 ---
+```{python}
+#| include: false
 
-## Test
+# Import functions in main
+from main import ContentScraper, BuzzCounter, WageExtractor
+
+# Set input parameters
+url = "https://www.werkenbijdeoverheid.nl/vacatures/forensisch-data-scientist-uit-het-veiligheidsdomein-NFI-2024-0064"
+technical_buzzwords = ["python", "machine learning", "GitHub"]
+personal_buzzwords = ["team", "analyti", "universit", "stakeholder"]
+working_buzzwords = ["team", "innovat", "agile"]
+
+# Scrape
+scraper = ContentScraper(url)
+scraper.fetch_and_convert()
+text = scraper.get_text()
+
+# Count buzzwords
+buzz_counter = BuzzCounter(technical_buzzwords, personal_buzzwords, working_buzzwords)
+buzz_counter.count_buzzwords(text)
+buzzword_counts = buzz_counter.get_category_counts()
+
+# Check wage
+wage_extractor = WageExtractor()
+wages = wage_extractor.extract_wages(text)
+```
+
+## Buzzwords
 test
 
 <span class="red-text">This is some red text.</span>
 
 ```{python}
 #| class-output: output
-
-x = "hello quarto"
-print(x)
-1 + 1
+buzzword_counts
 ```
 
-You can add options to executable code like this
+## Wages
 
 ```{python}
-#| class-output: output
+#| class-output: red-text
 
 2 * 2
 ```
