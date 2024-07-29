@@ -1,5 +1,4 @@
 requests
 beautifulsoup4
-reportlab
-markdown2
+ordered-set
 jupyter

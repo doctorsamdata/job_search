@@ -3,7 +3,7 @@ title: "Report"
 subtitle: "Match vacature"
 author: "Samare Huls"
 format: 
-    html:
+    pdf:
         css: styles.css
 ---
 

@@ -1,9 +1,9 @@
 import unittest
 from unittest.mock import patch, Mock
+from collections import Counter
 import requests
-import os
 
-from main import ContentScraper, BuzzCounter, WageExtractor, MarkdownReporter
+from main import ContentScraper, BuzzCounter, WageExtractor
 
 class TestContentScraper(unittest.TestCase):
     
@@ -50,36 +50,51 @@ class TestContentScraper(unittest.TestCase):
 class TestBuzzCounter(unittest.TestCase):
 
     def setUp(self):
-        self.buzzwords = ['innovation', 'synergy', 'git']
-        self.counter = BuzzCounter(self.buzzwords)
+        self.technical_buzzwords = ["python", "machine learning", "GitHub"]
+        self.personal_buzzwords = ["team", "analytic", "universit", "stakeholder"]
+        self.working_buzzwords = ["team", "innovat", "agile"]
+        self.counter = BuzzCounter(self.technical_buzzwords, self.personal_buzzwords, self.working_buzzwords)
     
     def test_initialization(self):
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0, 'git': 0})
+        expected_counts = Counter({**{word: 0 for word in self.technical_buzzwords}, 
+                                   **{word: 0 for word in self.personal_buzzwords}, 
+                                   **{word: 0 for word in self.working_buzzwords}})
+        self.assertEqual(self.counter.get_buzzword_counts(), expected_counts)
     
     def test_count_buzzwords(self):
-        text = 'Innovation and synergy are key. Innovation drives success.'
+        text = 'Python and machine learning are key. Innovation drives success. The team is analytic.'
         self.counter.count_buzzwords(text)
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 2, 'synergy': 1, 'git': 0})
+        self.assertEqual(self.counter.get_category_counts()['technical'], {'python': 1, 'machine learning': 1, 'GitHub': 0})
+        self.assertEqual(self.counter.get_category_counts()['personal'], {'team': 1, 'analytic': 1, 'universit': 0, 'stakeholder': 0})
+        self.assertEqual(self.counter.get_category_counts()['working'], {'team': 1, 'innovat': 1, 'agile': 0})
     
     def test_case_insensitivity(self):
-        text = 'Innovation INNOVATION'
+        text = 'Python PYTHON'
         self.counter.count_buzzwords(text)
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 2, 'synergy': 0, 'git': 0})
+        self.assertEqual(self.counter.get_category_counts()['technical'], {'python': 2, 'machine learning': 0, 'GitHub': 0})
+        self.assertEqual(self.counter.get_category_counts()['personal'], {'team': 0, 'analytic': 0, 'universit': 0, 'stakeholder': 0})
+        self.assertEqual(self.counter.get_category_counts()['working'], {'team': 0, 'innovat': 0, 'agile': 0})
     
     def test_no_buzzwords(self):
         text = 'There are no matching words here.'
         self.counter.count_buzzwords(text)
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0, 'git': 0})
+        self.assertEqual(self.counter.get_category_counts()['technical'], {'python': 0, 'machine learning': 0, 'GitHub': 0})
+        self.assertEqual(self.counter.get_category_counts()['personal'], {'team': 0, 'analytic': 0, 'universit': 0, 'stakeholder': 0})
+        self.assertEqual(self.counter.get_category_counts()['working'], {'team': 0, 'innovat': 0, 'agile': 0})
     
     def test_empty_text(self):
         text = ''
         self.counter.count_buzzwords(text)
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0, 'git': 0})
-
+        self.assertEqual(self.counter.get_category_counts()['technical'], {'python': 0, 'machine learning': 0, 'GitHub': 0})
+        self.assertEqual(self.counter.get_category_counts()['personal'], {'team': 0, 'analytic': 0, 'universit': 0, 'stakeholder': 0})
+        self.assertEqual(self.counter.get_category_counts()['working'], {'team': 0, 'innovat': 0, 'agile': 0})
+    
     def test_partial_buzzwords(self):
-        text = 'GitHub uses Git as a version control system.'
+        text = 'GitHub uses Git as a version control system. The team is working in an agile environment.'
         self.counter.count_buzzwords(text)
-        self.assertEqual(self.counter.get_buzzword_counts(), {'innovation': 0, 'synergy': 0, 'git': 2})
+        self.assertEqual(self.counter.get_category_counts()['technical'], {'python': 0, 'machine learning': 0, 'GitHub': 1})
+        self.assertEqual(self.counter.get_category_counts()['personal'], {'team': 1, 'analytic': 0, 'universit': 0, 'stakeholder': 0})
+        self.assertEqual(self.counter.get_category_counts()['working'], {'team': 1, 'innovat': 0, 'agile': 1})
 
 class TestWageExtractor(unittest.TestCase):
 
@@ -96,8 +111,7 @@ class TestWageExtractor(unittest.TestCase):
         
         expected_wages = [
             '€ 5.212,-', '€ 7.747', '€5.008,-', '€6.777,-',
-            '€7.300,-', '€4.691', '€6.907', '€4.691', '€6.907',
-            '€4.691', '€6.907'
+            '€7.300,-', '€4.691', '€6.907'
         ]
         
         extracted_wages = self.wage_extractor.extract_wages(text)
@@ -107,58 +121,10 @@ class TestWageExtractor(unittest.TestCase):
         text = 'There are no wages mentioned in this text.'
         self.assertEqual(self.wage_extractor.extract_wages(text), [])
 
-class TestMarkdownReporter(unittest.TestCase):
-    def setUp(self):
-        self.filename = 'test_report.md'
-        self.reporter = MarkdownReporter(self.filename)
-        self.url = "https://example.com"
-        self.buzzwords = ['innovation', 'synergy', 'git']
-        self.buzzword_counts = {'innovation': 2, 'synergy': 1, 'git': 0}
-        self.wages = ["€5.212", "€7.747"]
-
-    @patch('builtins.open', new_callable=mock_open)
-    def test_write_report(self, mock_open):
-        mock_file = Mock()
-        mock_open.return_value = mock_file
-        self.reporter.write_report(self.url, self.buzzwords, self.buzzword_counts, self.wages)
-
-        # Check if Markdown file is created
-        markdown_content = f"""
-        
-        # Report for URL: {self.url}
-        
-        ## Buzzwords
-        {', '.join(self.buzzwords)}
-
-        ## Buzzword Counts
-        {self.reporter.format_buzzword_counts(self.buzzword_counts)}
-
-        ## Extracted Wages
-        {self.reporter.format_wages(self.wages)}
-        """
-        markdown_content = markdown_content.strip()  # Remove extra newlines at the start and end
-
-        # Verify Markdown file content
-        mock_open.assert_called_once_with(self.filename, 'w')
-        handle = mock_open()
-        handle.write.assert_called_once_with(markdown_content)
-        
-        # Verify HTML file content
-        html_content = md2html(markdown_content)
-        html_filename = self.filename.replace('.md', '.html')
-        with open(html_filename, 'w') as file:
-            file.write(html_content)
-        
-        # Ensure HTML file creation
-        self.assertTrue(os.path.exists(html_filename))
-
-    def tearDown(self):
-        # Cleanup files after test
-        if os.path.exists(self.filename):
-            os.remove(self.filename)
-        html_filename = self.filename.replace('.md', '.html')
-        if os.path.exists(html_filename):
-            os.remove(html_filename)
+    def test_get_unique_wages(self):
+        wages = ['€4.024', '€6.110', '€4.024', '€6.110']
+        unique_wages = self.wage_extractor.get_unique_wages(wages)
+        self.assertEqual(unique_wages, ['€4.024', '€6.110'])
 
 if __name__ == "__main__":
     unittest.main()

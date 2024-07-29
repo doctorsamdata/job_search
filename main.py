@@ -1,7 +1,7 @@
 import re, requests
 from bs4 import BeautifulSoup
 from collections import Counter
-from markdown2 import markdown as md2html
+from ordered_set import OrderedSet
 
 class ContentScraper:
     def __init__(self, url):
@@ -30,13 +30,16 @@ class ContentScraper:
         return self.text
     
 class BuzzCounter:
-    def __init__(self, buzzwords):
-        self.buzzwords = buzzwords
-        self.buzzword_counts = Counter({buzzword: 0 for buzzword in buzzwords})
+    def __init__(self, technical_buzzwords, personal_buzzwords, working_buzzwords):
+        self.technical_buzzwords = technical_buzzwords
+        self.personal_buzzwords = personal_buzzwords
+        self.working_buzzwords = working_buzzwords
+        self.buzzword_counts = Counter({buzzword: 0 for buzzword in 
+                                        technical_buzzwords + personal_buzzwords + working_buzzwords})
 
     def count_buzzwords(self, text):
         text = text.lower()
-        for buzzword in self.buzzwords:
+        for buzzword in self.buzzword_counts:
             # Use a regular expression to find all occurrences of the buzzword, even as part of other words
             pattern = re.compile(re.escape(buzzword), re.IGNORECASE)
             matches = pattern.findall(text)
@@ -45,6 +48,16 @@ class BuzzCounter:
     def get_buzzword_counts(self):
         return dict(self.buzzword_counts)
     
+    def get_category_counts(self):
+        technical_counts = {buzzword: self.buzzword_counts[buzzword] for buzzword in self.technical_buzzwords}
+        personal_counts = {buzzword: self.buzzword_counts[buzzword] for buzzword in self.personal_buzzwords}
+        working_counts = {buzzword: self.buzzword_counts[buzzword] for buzzword in self.working_buzzwords}
+        return {
+            'technical': technical_counts,
+            'personal': personal_counts,
+            'working': working_counts
+        }
+    
 class WageExtractor:
     def extract_wages(self, text):
         # Regular expression to match various wage formats in euros
@@ -52,49 +65,19 @@ class WageExtractor:
             r'€\s?\d{1,2}\.\d{3},?-?|€\d{1,2}\.\d{3}-|€\d{4}|€\s?\d{1,2}\.\d{3}\s?\–\s?€\d{1,2}\.\d{3}',
             re.IGNORECASE
         )
-        return pattern.findall(text)
+        wages = pattern.findall(text)
+        return self.get_unique_wages(wages)
     
-class MarkdownReporter:
-    def __init__(self, filename):
-        self.filename = filename
-    
-    def write_report(self, url, buzzwords, buzzword_counts, wages):
-        # Create Markdown content
-        markdown_content = f"""
-        
-        # Report for URL: {url}
-        
-        ## Buzzwords
-        {', '.join(buzzwords)}
-
-        ## Buzzword Counts
-        {self.format_buzzword_counts(buzzword_counts)}
-
-        ## Extracted Wages
-        {self.format_wages(wages)}
-        """
-
-        # Save to file
-        with open(self.filename, 'w') as file:
-            file.write(markdown_content)
-        
-        # Convert Markdown to HTML/PDF
-        html_content = md2html(markdown_content)
-        html_filename = self.filename.replace('.md', '.html')
-        with open(html_filename, 'w') as file:
-            file.write(html_content)
-
-    def format_buzzword_counts(self, counts):
-        return '\n'.join([f"{buzzword}: {count}" for buzzword, count in counts.items()])
-    
-    def format_wages(self, wages):
-        return '\n'.join(wages)
+    def get_unique_wages(self, wages):
+        # Return only unique wages
+        return list(OrderedSet(wages))
     
 # Example usage
 url = "https://www.werkenbijdeoverheid.nl/vacatures/forensisch-data-scientist-uit-het-veiligheidsdomein-NFI-2024-0064"
 #url = "https://www.sogeti.nl/vacatures/ai-data-scientist"
-buzzwords = ["data scien", "veiligheid", "GitHub", " ai ", "machine learning", "python", "agile", "innovatie"]
-filename = "report.md"
+technical_buzzwords = ["python", "machine learning", "GitHub"]
+personal_buzzwords = ["team", "analytic", "universit", "stakeholder"]
+working_buzzwords = ["team", "innovat", "agile"]
 
 # Scrape
 scraper = ContentScraper(url)
@@ -104,19 +87,12 @@ print(f"Scraped text: {text[:100]}...")  # Print first 100 characters of the scr
 print(f"Scraped text: {text}...")
 
 # Count buzzwords
-buzz_counter = BuzzCounter(buzzwords)
+buzz_counter = BuzzCounter(technical_buzzwords, personal_buzzwords, working_buzzwords)
 buzz_counter.count_buzzwords(text)
-buzzword_counts = buzz_counter.get_buzzword_counts()
+buzzword_counts = buzz_counter.get_category_counts()
 print(f"Buzzword Counts: {buzzword_counts}")
 
 # Check wage
 wage_extractor = WageExtractor()
 wages = wage_extractor.extract_wages(text)
 print(f"Extracted Wages: {wages}")
-
-# Generate Markdown report
-markdown_reporter = MarkdownReporter(filename)
-markdown_reporter.write_report(url, buzzwords, buzzword_counts, wages)
-
-
-print(f"Report generated and saved as {filename}")
