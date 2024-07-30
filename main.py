@@ -82,10 +82,9 @@ class WageExtractor:
         return list(OrderedSet(wages))
     
 # Example usage
-url = "https://www.werkenbijdeoverheid.nl/vacatures/forensisch-data-scientist-uit-het-veiligheidsdomein-NFI-2024-0064"
-#url = "https://www.sogeti.nl/vacatures/ai-data-scientist"
+url = "https://www.example.com/vacancy"
 technical_buzzwords = ["python", "machine learning", "GitHub"]
-personal_buzzwords = ["team", "analyti", "universit", "stakeholder"]
+personal_buzzwords = ["team", "analyti", "universit"]
 working_buzzwords = ["team", "innovat", "agile"]
 
 # Scrape
