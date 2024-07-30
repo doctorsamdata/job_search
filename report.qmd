@@ -1,17 +1,20 @@
 ---
-title: "Report"
-subtitle: "Match vacature"
+title: "Analyse vacature vs. wensen"
+subtitle: "Overeenkomsten in sleutelwoorden en salaris"
 author: "Samare Huls"
 format: 
     pdf:
         css: styles.css
 ---
+
 ```{python}
 #| include: false
 
 # Import functions and parameters
 from main import ContentScraper, BuzzCounter, WageExtractor
-from input_params import url, technical_buzzwords, personal_buzzwords, working_buzzwords
+from input_params import url, technical_buzzwords, personal_buzzwords, working_buzzwords, desired_wages
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Scrape
 scraper = ContentScraper(url)
@@ -29,37 +32,131 @@ wage_extractor = WageExtractor()
 wages = wage_extractor.extract_wages(text)
 ```
 
-## Sleutelwoorden
+## Hoe veel van de gewenste sleutelwoorden gevonden in vacature?
 
-Technisch: 
+```{python}
+#| echo: false
+#| include: false
+
+# Prepare data for plotting
+total_words = {
+    'technical': len(technical_buzzwords),
+    'personal': len(personal_buzzwords),
+    'working': len(working_buzzwords)
+}
+zero_values = {category: total_words[category] - nonzero_counts[category] for category in total_words}
+
+categories = list(nonzero_counts.keys())
+nonzero_values = list(nonzero_counts.values())
+zero_values_list = [zero_values[category] for category in categories]
+
+# Mapping of categories to desired labels
+category_labels = {
+    'technical': 'Wat doe je?',
+    'personal': 'Wie ben je?',
+    'working': 'Hoe werk je?'
+}
+```
+
+```{python}
+#| echo: false
+
+# Plot the data
+plt.figure(figsize=(8, 6))
+
+# Stacked bar chart
+bar_width = 0.5
+p1 = plt.bar(categories, nonzero_values, bar_width, label='Overeenkomstige sleutelwoorden', color='#B1E0E1')
+p2 = plt.bar(categories, zero_values_list, bar_width, bottom=nonzero_values, label='Ontbrekende sleutelwoorden', color='lightgray')
+
+#plt.title('Sleutelwoorden in vacature per categorie')
+plt.legend()
+
+# Annotate bars with the actual count values
+for i in range(len(categories)):
+    plt.text(i, nonzero_values[i] / 2, f"{nonzero_values[i]}", ha='center', color='black')
+    if zero_values_list[i] > 0:
+        plt.text(i, nonzero_values[i] + (zero_values_list[i] / 2), f"{zero_values_list[i]}", ha='center', color='black')
+
+# Update x-axis labels
+plt.xticks(ticks=range(len(categories)), labels=[category_labels[cat] for cat in categories])
+
+plt.show()
+```
+
+## Hoe vaak gewenste sleutelwoorden gevonden in vacature?
+
+Wat doe je?: 
 ```{python}
 #| echo: false
 buzzword_counts['technical']
 ```
 
-Persoonlijk: 
+Wie ben je?: 
 ```{python}
 #| echo: false
 buzzword_counts['personal']
 ```
 
-Werkwijze:
+Hoe werk je?:
 ```{python}
 #| echo: false
 buzzword_counts['working']
 ```
 
-## Aantal gevonden sleutelwoorden / aantal te vinden sleutelwoorden
+## Geboden vs. gewenst salaris
 
-
-## Salaris
-
-## Test formatting
 ```{python}
-#| class-output: red-text
+#| echo: false
+# Initiate current and desired wages
+current_wages = wages
+desired_wages = desired_wages
 
-2 * 2
+# Function to convert wage strings to float
+def convert_wage(wage_str):
+    return float(wage_str.replace('€', '').replace('.', '').replace(',', ''))
+
+# Convert wage strings to numerical values
+current_min = convert_wage(current_wages[0])
+current_max = convert_wage(current_wages[1])
+desired_min = convert_wage(desired_wages[0])
+desired_max = convert_wage(desired_wages[1])
+
+# Plotting the data
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Bar width
+bar_width = 0.2
+x = np.arange(1)
+
+# Plot the lighter blue bar from 0 to the minimum of the current wage
+ax.bar(x, current_min, bar_width, color='#B1E0E1', zorder=1)
+
+# Plot the main blue bar from minimum to maximum of the current wage
+ax.bar(x, current_max - current_min, bar_width, bottom=current_min, color='#2e5b6f', label='Geboden salaris', zorder=2)
+
+# Plot a solid, thicker vertical line for the desired wage range
+ax.plot([x[0], x[0]], [desired_min, desired_max], color='#f5f5dc', linestyle='-', linewidth=8, label='Gewenst salaris', zorder=3)
+
+# Set y-axis limits
+ax.set_ylim(0, desired_max + (desired_max - desired_min) * 0.1)
+
+# Set x-axis limits
+ax.set_xlim(-0.25, 0.25)
+
+# Labels and title
+ax.set_ylabel('Maandsalaris in euros (€)')
+ax.set_xticks([])
+
+# Add legend
+ax.legend()
+
+# Annotate the current wage range
+ax.annotate(f'€{current_min:,.0f}', xy=(x[0], current_min), xytext=(0, -15), textcoords="offset points",
+            ha='center', va='center', color='#2e5b6f')
+ax.annotate(f'€{current_max:,.0f}', xy=(x[0], current_max), xytext=(0, 15), textcoords="offset points",
+            ha='center', va='center', color='#2e5b6f')
+
+plt.tight_layout()  # Adjust layout to fit into the figure area
+plt.show()
 ```
-
-
-<span class="red-text">This is some red text.</span>
