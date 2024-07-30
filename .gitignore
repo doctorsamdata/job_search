@@ -1,10 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+.vdoc.py
+
 # Read me
 README_files/
 README.html
 
 # Report
 report.html
-report.md
 report.pdf
 report_files
 .DS_Store
+
+# Input parameters
+input_params.py

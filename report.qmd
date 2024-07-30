@@ -9,14 +9,9 @@ format:
 ```{python}
 #| include: false
 
-# Import functions in main
+# Import functions and parameters
 from main import ContentScraper, BuzzCounter, WageExtractor
-
-# Set input parameters
-url = "https://www.werkenbijdeoverheid.nl/vacatures/forensisch-data-scientist-uit-het-veiligheidsdomein-NFI-2024-0064"
-technical_buzzwords = ["python", "machine learning", "GitHub"]
-personal_buzzwords = ["team", "analyti", "universit", "stakeholder"]
-working_buzzwords = ["team", "innovat", "agile"]
+from input_params import url, technical_buzzwords, personal_buzzwords, working_buzzwords
 
 # Scrape
 scraper = ContentScraper(url)
@@ -27,26 +22,44 @@ text = scraper.get_text()
 buzz_counter = BuzzCounter(technical_buzzwords, personal_buzzwords, working_buzzwords)
 buzz_counter.count_buzzwords(text)
 buzzword_counts = buzz_counter.get_category_counts()
+nonzero_counts = buzz_counter.get_non_zero_category_counts()
 
 # Check wage
 wage_extractor = WageExtractor()
 wages = wage_extractor.extract_wages(text)
 ```
 
-## Buzzwords
-test
+## Sleutelwoorden
 
-<span class="red-text">This is some red text.</span>
-
+Technisch: 
 ```{python}
-#| class-output: output
-buzzword_counts
+#| echo: false
+buzzword_counts['technical']
 ```
 
-## Wages
+Persoonlijk: 
+```{python}
+#| echo: false
+buzzword_counts['personal']
+```
 
+Werkwijze:
+```{python}
+#| echo: false
+buzzword_counts['working']
+```
+
+## Aantal gevonden sleutelwoorden / aantal te vinden sleutelwoorden
+
+
+## Salaris
+
+## Test formatting
 ```{python}
 #| class-output: red-text
 
 2 * 2
 ```
+
+
+<span class="red-text">This is some red text.</span>

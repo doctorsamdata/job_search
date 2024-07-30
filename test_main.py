@@ -96,6 +96,17 @@ class TestBuzzCounter(unittest.TestCase):
         self.assertEqual(self.counter.get_category_counts()['personal'], {'team': 1, 'analytic': 0, 'universit': 0, 'stakeholder': 0})
         self.assertEqual(self.counter.get_category_counts()['working'], {'team': 1, 'innovat': 0, 'agile': 1})
 
+    def test_get_non_zero_category_counts(self):
+        text = 'Python and machine learning are key. Our team is innovative and analytic. We use GitHub and work in agile teams.'
+        self.counter.count_buzzwords(text)
+        expected_non_zero_counts = {
+            'technical': 3,
+            'personal': 2,
+            'working': 3
+        }
+        self.assertEqual(self.counter.get_non_zero_category_counts(), expected_non_zero_counts)
+
+
 class TestWageExtractor(unittest.TestCase):
 
     def setUp(self):

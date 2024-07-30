@@ -58,6 +58,15 @@ class BuzzCounter:
             'working': working_counts
         }
     
+    def get_non_zero_category_counts(self):
+        category_counts = self.get_category_counts()
+        non_zero_counts = {
+            'technical': sum(1 for count in category_counts['technical'].values() if count > 0),
+            'personal': sum(1 for count in category_counts['personal'].values() if count > 0),
+            'working': sum(1 for count in category_counts['working'].values() if count > 0)
+        }
+        return non_zero_counts
+    
 class WageExtractor:
     def extract_wages(self, text):
         # Regular expression to match various wage formats in euros
@@ -89,9 +98,11 @@ print(f"Scraped text: {text[:100]}...")  # Print first 100 characters of the scr
 buzz_counter = BuzzCounter(technical_buzzwords, personal_buzzwords, working_buzzwords)
 buzz_counter.count_buzzwords(text)
 buzzword_counts = buzz_counter.get_category_counts()
-print(f"Buzzword Counts: {buzzword_counts}")
+nonzero_counts = buzz_counter.get_non_zero_category_counts()
+print(f"Buzzword counts: {buzzword_counts}")
+print(f"Non-zero counts: {nonzero_counts}")
 
 # Check wage
 wage_extractor = WageExtractor()
 wages = wage_extractor.extract_wages(text)
-print(f"Extracted Wages: {wages}")
+print(f"Extracted wages: {wages}")
